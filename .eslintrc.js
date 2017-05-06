@@ -62,7 +62,7 @@ module.exports = {
     'no-undef': 'warn',
     'no-unused-vars': ['warn', {
       'vars': 'all',
-      'args': 'after-used'
+      'args': 'none'
     }],
     'no-use-before-define': ['warn', {
       'functions': false,
