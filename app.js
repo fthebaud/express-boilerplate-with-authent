@@ -5,6 +5,7 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
+const conf = require ('./configuration/conf');
 const index = require('./routes/index');
 
 // Creating the app
@@ -25,6 +26,18 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // routes
+if (conf.sslEnabled) {
+  // ensure all requests are redirected to https
+  app.all('*', (req, res, next) => {
+    if(req.secure){
+      // OK, continue
+      return next();
+    }
+    // else redirect to https
+    res.redirect(`https://${req.hostname}:${conf.sslPort}${req.url}`);
+  });
+}
+
 app.use('/', index);
 
 // Last middleware, will catch 404 and forward to error handler

@@ -2,45 +2,48 @@
 
 const debug = require('debug')('my-event:server');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
 const app = require('../app');
 const conf = require ('../configuration/conf');
 
-/**
- * Get port from environment and store in Express app.
- */
-const port = normalizePort(process.env.PORT || conf.port);
-app.set('port', port);
 
 /**
  * Create HTTP server for the app.
  */
 const server = http.createServer(app);
 
+// if ssl is enabled, create a HTTPS server for the app
+let securedServer = null;
+if (conf.sslEnabled) {
+  // self-signed certificate was generated using openssl (ERR_CERT_AUTHORITY_INVALID...)
+  //  openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365
+  // then the pass was (thales35) removed because of "bad password read" error
+  // openssl rsa -in key.pem -out newkey.pem && mv newkey.pem key.pem
+  // http://blog.mgechev.com/2014/02/19/create-https-tls-ssl-application-with-express-nodejs/
+  const httpsCredentials = {
+    key: fs.readFileSync(path.join(__dirname, '../ssl/key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '../ssl/cert.pem'))
+  };
+
+  securedServer = https.createServer(httpsCredentials, app);
+}
+
 /**
  * Server will listen on provided port, on all network interfaces.
  */
-server.listen(port);
+server.listen(conf.port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-/**
- * Normalize a port into a number, string, or false.
- */
-function normalizePort(val) {
-  const port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
+if (securedServer) {
+  securedServer.listen(conf.sslPort);
+  securedServer.on('error', onError);
+  securedServer.on('listening', onListening);
 }
+
 
 /**
  * Event listener for HTTP server "error" event.
@@ -49,7 +52,7 @@ function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
   }
-
+  const { port } = conf;
   const bind = typeof port === 'string'
     ? 'Pipe ' + port
     : 'Port ' + port;
