@@ -7,7 +7,6 @@ module.exports = {
     ecmaVersion: 6,
     sourceType: 'module',
     ecmaFeatures: {
-      'jsx': true,
       'experimentalObjectRestSpread': true
     }
   },
@@ -21,8 +20,6 @@ module.exports = {
 
   // addding user defined globals
   globals: {
-    io: false,
-    veomockGlobal: true
   },
 
   // Extending configuration
@@ -32,6 +29,7 @@ module.exports = {
 
 
   rules: {
+
     // Possible errors
     'comma-dangle': 'warn',
     'no-console': 'off',
