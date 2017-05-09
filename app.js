@@ -25,9 +25,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Serving static content
-app.use(express.static(path.join(__dirname, 'public')));
-
 /*
 /* routes
 */
@@ -42,11 +39,17 @@ app.all('*', (req, res, next) => {
   }
 });
 
-// login route, unrestricted.
-// must be placed before token check ! (not authentication needed)
+
+/* UNRESTRICTED ROUTES (before token check) */
+
+// public static content
+app.use(express.static(path.join(__dirname, 'public')));
+
+// login page
 app.use('/login', login);
 
-// token check
+
+/* TOKEN CHECK */
 app.all('*', (req, res, next) => {
   // check the the user is authorized to access the application
   if (tokenValidator.isTokenValid(req.cookies.userToken)){
@@ -57,6 +60,12 @@ app.all('*', (req, res, next) => {
     res.redirect(`/login?failed=${req.query.failed ? 1 : 0}`);
   }
 });
+
+
+/* RESTRICTED ROUTES (after token check) */
+
+// private static content
+app.use(express.static(path.join(__dirname, 'private')));
 
 // redirect every route that hasn't been match yet to index route
 app.use('/', index);
